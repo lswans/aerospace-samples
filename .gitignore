@@ -1,0 +1,5 @@
+.venv/
+certs/
+*.zip
+live.out
+__pycache__/

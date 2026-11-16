@@ -1,0 +1,9 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Effect": "Allow", "Action": "iot:Connect", "Resource": "arn:aws:iot:*:*:client/gsu-rocket-avionics" },
+    { "Effect": "Allow", "Action": "iot:Publish", "Resource": "arn:aws:iot:*:*:topic/rocket/gsu-rocket-avionics/*" },
+    { "Effect": "Allow", "Action": ["iot:Subscribe"], "Resource": "arn:aws:iot:*:*:topicfilter/rocket/gsu-rocket-avionics/cmd" },
+    { "Effect": "Allow", "Action": "iot:Receive", "Resource": "arn:aws:iot:*:*:topic/rocket/gsu-rocket-avionics/cmd" }
+  ]
+}
