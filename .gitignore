@@ -3,3 +3,5 @@ certs/
 *.zip
 live.out
 __pycache__/
+.aws-sam/
+.local/
