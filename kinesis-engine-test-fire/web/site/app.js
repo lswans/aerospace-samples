@@ -53,7 +53,25 @@ function setFlame(thrust) {
 }
 
 // ---------- state ----------
+function appendStreamRows(newRows) {
+  const body = $("streamRows"), fragment = document.createDocumentFragment();
+  for (const r of newRows) {
+    const tr = document.createElement("tr");
+    for (const value of [
+      `${r.t.toFixed(2)} s`, `${Math.round(r.thrust_n)} N`, `${Math.round(r.predicted_thrust_n)} N`,
+      `${Math.round(r.chamber_temp_c)} °C`, `${r.burn_rate_kg_s.toFixed(3)} kg/s`,
+      `${r.chamber_pressure_bar.toFixed(1)} bar`
+    ]) {
+      const td = document.createElement("td"); td.textContent = value; tr.appendChild(td);
+    }
+    fragment.prepend(tr);
+  }
+  body.prepend(fragment);
+  $("streamCount").textContent = body.rows.length;
+}
+
 function ingest(newRows, latency) {
+  appendStreamRows(newRows);
   for (const r of newRows) {
     if (rows.length && r.t <= rows[rows.length - 1].t && r.burn_id !== rows[rows.length - 1].burn_id) continue;
     impulse += r.thrust_n * Math.max(0, r.t - lastT); lastT = r.t;
@@ -75,6 +93,7 @@ function ingest(newRows, latency) {
 
 function reset() {
   rows = []; impulse = 0; lastT = 0; quietPolls = 0;
+  $("streamRows").replaceChildren(); $("streamCount").textContent = "0";
   $("rowcount").textContent = "0 records"; $("latency").textContent = "--";
   setFlame(0); drawAll();
 }

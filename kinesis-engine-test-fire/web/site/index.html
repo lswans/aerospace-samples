@@ -23,11 +23,32 @@
 
 <section class="path">
   <span class="node">Test stand</span><span class="arrow">&rarr;</span>
-  <span class="node hot">Amazon Kinesis Data Streams</span><span class="arrow">&rarr;</span>
-  <span class="node">Reader (Lambda)</span><span class="arrow">&rarr;</span>
+  <a class="node hot resource-node" href="https://us-east-1.console.aws.amazon.com/kinesis/home?region=us-east-1#/streams/details/rocket-test-fire/dataViewer" target="_blank" rel="noopener noreferrer" title="Open the rocket-test-fire Data Viewer in the AWS Console">Amazon Kinesis Data Streams <span aria-hidden="true">↗</span></a><span class="arrow">&rarr;</span>
+  <a class="node resource-node" href="https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/rocket-demo-api?tab=code" target="_blank" rel="noopener noreferrer" title="Open rocket-demo-api in the AWS Console">Reader (Lambda) <span aria-hidden="true">↗</span></a><span class="arrow">&rarr;</span>
   <span class="node">This page</span>
   <span class="note" id="rowcount">0 records</span>
 </section>
+
+<nav class="aws-resources" aria-label="AWS resources used by this demo">
+  <span class="label">Open in AWS Console</span>
+  <a href="https://us-east-1.console.aws.amazon.com/kinesis/home?region=us-east-1#/streams/details/rocket-test-fire/dataViewer" target="_blank" rel="noopener noreferrer">Kinesis Data Viewer <span aria-hidden="true">↗</span></a>
+  <a href="https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/rocket-demo-api?tab=code" target="_blank" rel="noopener noreferrer">Producer and reader Lambda <span aria-hidden="true">↗</span></a>
+  <a href="https://us-east-1.console.aws.amazon.com/apigateway/main/apis/jmfy3h30b9/routes?api=jmfy3h30b9&amp;region=us-east-1" target="_blank" rel="noopener noreferrer">HTTP API routes <span aria-hidden="true">↗</span></a>
+  <a href="https://us-east-1.console.aws.amazon.com/amplify/apps/d1q58sgi4m7r41/overview" target="_blank" rel="noopener noreferrer">Amplify hosting <span aria-hidden="true">↗</span></a>
+</nav>
+
+<details class="stream-panel">
+  <summary>
+    <span>Live Kinesis records</span>
+    <span class="stream-summary"><span id="streamCount">0</span> received <span aria-hidden="true">▾</span></span>
+  </summary>
+  <div class="stream-table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Thrust</th><th>Predicted</th><th>Temperature</th><th>Burn rate</th><th>Pressure</th></tr></thead>
+      <tbody id="streamRows"></tbody>
+    </table>
+  </div>
+</details>
 
 <main class="grid">
   <section class="stand">
