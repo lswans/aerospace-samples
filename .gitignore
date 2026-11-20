@@ -5,3 +5,7 @@ live.out
 __pycache__/
 .aws-sam/
 .local/
+node_modules/
+dist/
+test-results/
+playwright-report/

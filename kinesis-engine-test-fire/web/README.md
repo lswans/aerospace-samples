@@ -1,12 +1,12 @@
 # Rocket engine test stand: live telemetry over Amazon Kinesis
 
-A web page shows a rocket engine on a test stand. Press **Initiate Burn**: a producer starts
+A React page shows a rocket engine on a test stand. Press **Initiate Burn**: a producer starts
 writing 20 telemetry rows per second into a Kinesis data stream, a reader pulls them back off the
 stream, and the page animates the plume and charts thrust, chamber temperature, burn rate and
-pressure as the test runs. End-to-end latency (producer write to reader read) shows as one number.
+pressure. End-to-end latency shows as one number.
 
 ```
-[Initiate Burn] -> API Gateway -> Lambda (producer) -> Kinesis Data Streams -> Lambda (reader) -> page
+[Initiate Burn] -> API Gateway -> Lambda (producer) -> Kinesis Data Streams -> Lambda (reader) -> React page
 ```
 
 ## Files
@@ -17,32 +17,42 @@ pressure as the test runs. End-to-end latency (producer write to reader read) sh
 | `lambda/app.py` | Producer (async self-invoke, 10 s burn) and reader (shard iterators, latency) |
 | `lambda/test_offline.py` | Fake-Kinesis test: `python test_offline.py` |
 | `lambda/test_live.py` | Real-stream test; needs `aws login` |
-| `site/` | Static page: SVG engine, canvas charts, polling client. `config.js` holds the API URL |
-| `deploy.sh` | Deploys the API, writes `config.js`, uploads the site to Amplify, locks CORS |
+| `site/src/App.jsx` | React UI, engine SVG, charts, live record panel and polling client |
+| `site/public/config.json` | API URL placeholder; `deploy.sh` replaces the built copy |
+| `deploy.sh` | Builds Vite, deploys the API, uploads `dist/` to Amplify, then locks CORS |
 
 ## Run it
 
-Rehearse with no AWS: open `site/index.html` in a browser. With an empty `config.js` the page
-runs a simulated burn.
+Local simulated mode:
 
-Deploy (needs `aws login`, `sam`, `zip`; stream `rocket-test-fire` must exist in us-east-1):
+    cd site
+    npm ci
+    npm run dev
+
+Open the local URL. An empty `public/config.js` enables simulated data.
+
+Build only:
+
+    cd site
+    npm run build
+
+Deploy (needs `aws login`, `sam`, Node.js, npm, and zip):
 
     ./deploy.sh
 
-It prints the site URL. Teardown commands print at the end.
+The stream `rocket-test-fire` must exist in us-east-1. The script prints the site URL and teardown commands.
 
 ## Talking points
 
-- Kinesis decouples the test stand from every consumer. The page is one reader; a recorder, an
-  abort monitor and a data-lake archive can read the same stream at the same time.
-- Latency of a few hundred ms is the round trip through the stream, not network lag to the stand.
-- Swap the reader Lambda for Amazon Managed Service for Apache Flink to compute 1 s windows,
-  running total impulse, and redline alarms in-stream, then publish the results to a second stream
-  that this page reads. The page code does not change.
+- Kinesis decouples the test stand from every consumer. The React page is one reader; a recorder,
+  abort monitor and data-lake archive can read the same stream.
+- Latency is the round trip through the stream, not stand network lag.
+- Amazon Managed Service for Apache Flink can compute 1 s windows, running total impulse and
+  redline alarms in-stream, then publish results to another stream.
 
 ## Security notes
 
-- The page and API are public; the audience is anonymous students. `POST /burn` is throttled
-  (5 rps, burst 10), the Lambda has reserved concurrency 4, and each burn costs about 200 PUTs.
-- The Lambda role can only read and write the one stream and invoke itself.
-- CORS is locked to the Amplify origin after the first deploy.
+- The page and API are public for anonymous students. `POST /burn` is throttled to 5 requests/s
+  with burst 10. Lambda reserved concurrency is 4. Each burn writes about 200 records.
+- The Lambda role can only read and write one stream and invoke itself.
+- CORS is locked to the Amplify origin after deployment.

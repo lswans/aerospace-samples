@@ -1,120 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSU-RX-1 Hot Fire | Streaming telemetry with Amazon Kinesis</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-</head>
-<body>
-
-<header class="top">
-  <div>
-    <h1>GSU-RX-1 static fire</h1>
-    <p class="sub">Engine telemetry streamed through Amazon Kinesis, live</p>
-  </div>
-  <div class="controls">
-    <div class="stat"><span class="label">End-to-end latency</span><span id="latency" class="value mono">--</span></div>
-    <div class="stat"><span class="label">Status</span><span id="status" class="value">Idle</span></div>
-    <button id="burn">Initiate Burn</button>
-  </div>
-</header>
-
-<section class="path">
-  <span class="node">Test stand</span><span class="arrow">&rarr;</span>
-  <a class="node hot resource-node" href="https://us-east-1.console.aws.amazon.com/kinesis/home?region=us-east-1#/streams/details/rocket-test-fire/dataViewer" target="_blank" rel="noopener noreferrer" title="Open the rocket-test-fire Data Viewer in the AWS Console">Amazon Kinesis Data Streams <span aria-hidden="true">↗</span></a><span class="arrow">&rarr;</span>
-  <a class="node resource-node" href="https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/rocket-demo-api?tab=code" target="_blank" rel="noopener noreferrer" title="Open rocket-demo-api in the AWS Console">Reader (Lambda) <span aria-hidden="true">↗</span></a><span class="arrow">&rarr;</span>
-  <span class="node">This page</span>
-  <span class="note" id="rowcount">0 records</span>
-</section>
-
-<nav class="aws-resources" aria-label="AWS resources used by this demo">
-  <span class="label">Open in AWS Console</span>
-  <a href="https://us-east-1.console.aws.amazon.com/kinesis/home?region=us-east-1#/streams/details/rocket-test-fire/dataViewer" target="_blank" rel="noopener noreferrer">Kinesis Data Viewer <span aria-hidden="true">↗</span></a>
-  <a href="https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/rocket-demo-api?tab=code" target="_blank" rel="noopener noreferrer">Producer and reader Lambda <span aria-hidden="true">↗</span></a>
-  <a href="https://us-east-1.console.aws.amazon.com/apigateway/main/apis/jmfy3h30b9/routes?api=jmfy3h30b9&amp;region=us-east-1" target="_blank" rel="noopener noreferrer">HTTP API routes <span aria-hidden="true">↗</span></a>
-  <a href="https://us-east-1.console.aws.amazon.com/amplify/apps/d1q58sgi4m7r41/overview" target="_blank" rel="noopener noreferrer">Amplify hosting <span aria-hidden="true">↗</span></a>
-</nav>
-
-<details class="stream-panel">
-  <summary>
-    <span>Live Kinesis records</span>
-    <span class="stream-summary"><span id="streamCount">0</span> received <span aria-hidden="true">▾</span></span>
-  </summary>
-  <div class="stream-table-wrap">
-    <table>
-      <thead><tr><th>Time</th><th>Thrust</th><th>Predicted</th><th>Temperature</th><th>Burn rate</th><th>Pressure</th></tr></thead>
-      <tbody id="streamRows"></tbody>
-    </table>
-  </div>
-</details>
-
-<main class="grid">
-  <section class="stand">
-    <svg id="engine" viewBox="0 0 400 620" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="metal" x1="0" x2="1"><stop offset="0" stop-color="#5b6473"/><stop offset=".5" stop-color="#c9d1dc"/><stop offset="1" stop-color="#4a525f"/></linearGradient>
-        <linearGradient id="chamber" x1="0" x2="1"><stop offset="0" stop-color="#6f3b1f"/><stop offset=".5" stop-color="#d8a06a"/><stop offset="1" stop-color="#5a2e16"/></linearGradient>
-        <radialGradient id="flameCore" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".25" stop-color="#ffe680"/><stop offset=".6" stop-color="#ff8a1f"/><stop offset="1" stop-color="rgba(255,60,0,0)"/></radialGradient>
-        <radialGradient id="flameOuter" cx=".5" cy="0" r="1"><stop offset="0" stop-color="rgba(120,180,255,.9)"/><stop offset=".5" stop-color="rgba(255,120,40,.5)"/><stop offset="1" stop-color="rgba(255,60,0,0)"/></radialGradient>
-        <filter id="blur"><feGaussianBlur stdDeviation="4"/></filter>
-      </defs>
-
-      <!-- stand frame -->
-      <rect x="40" y="20" width="320" height="18" rx="3" fill="#2b3240"/>
-      <rect x="60" y="38" width="14" height="300" fill="#2b3240"/>
-      <rect x="326" y="38" width="14" height="300" fill="#2b3240"/>
-      <rect x="40" y="330" width="320" height="14" rx="3" fill="#2b3240"/>
-      <line x1="74" y1="60" x2="326" y2="320" stroke="#232935" stroke-width="6"/>
-      <line x1="326" y1="60" x2="74" y2="320" stroke="#232935" stroke-width="6"/>
-      <text x="200" y="33" text-anchor="middle" font-size="11" fill="#8a94a6" font-family="Inter">LOAD CELL MOUNT</text>
-
-      <!-- feed lines -->
-      <path d="M90 40 v80 h60 v40" fill="none" stroke="#5aa0ff" stroke-width="6"/>
-      <path d="M310 40 v80 h-60 v40" fill="none" stroke="#ff7a5a" stroke-width="6"/>
-      <text x="92" y="135" font-size="10" fill="#5aa0ff" font-family="Inter">LOX</text>
-      <text x="282" y="135" font-size="10" fill="#ff7a5a" font-family="Inter">RP-1</text>
-
-      <!-- injector + chamber -->
-      <rect x="140" y="150" width="120" height="40" rx="6" fill="url(#metal)"/>
-      <rect x="150" y="190" width="100" height="120" rx="14" fill="url(#chamber)" id="chamberBody"/>
-      <!-- throat + nozzle bell -->
-      <path d="M160 310 Q200 330 240 310 L300 480 Q200 520 100 480 Z" fill="url(#metal)"/>
-      <path d="M118 470 Q200 505 282 470" fill="none" stroke="#1d222c" stroke-width="3"/>
-
-      <!-- plume -->
-      <g id="plume" opacity="0">
-        <path id="flameOuter" d="M112 478 Q200 520 288 478 L250 640 Q200 700 150 640 Z" fill="url(#flameOuter)" filter="url(#blur)"/>
-        <path id="flameCore" d="M135 482 Q200 510 265 482 L235 600 Q200 650 165 600 Z" fill="url(#flameCore)"/>
-        <ellipse cx="200" cy="500" rx="40" ry="10" fill="#ffffff" opacity=".8"/>
-      </g>
-      <rect x="0" y="560" width="400" height="60" fill="#0f131a"/>
-      <text x="200" y="600" text-anchor="middle" font-size="12" fill="#8a94a6" font-family="Inter">FLAME TRENCH</text>
-    </svg>
-    <div class="readouts">
-      <div><span class="label">Thrust</span><span id="rThrust" class="mono">0 N</span></div>
-      <div><span class="label">Chamber temp</span><span id="rTemp" class="mono">0 &deg;C</span></div>
-      <div><span class="label">Burn rate</span><span id="rBurn" class="mono">0.000 kg/s</span></div>
-      <div><span class="label">Pressure</span><span id="rPress" class="mono">0.0 bar</span></div>
-      <div><span class="label">Total impulse</span><span id="rImpulse" class="mono">0 N&middot;s</span></div>
-      <div><span class="label">Burn time</span><span id="rTime" class="mono">0.0 s</span></div>
-    </div>
-  </section>
-
-  <section class="charts">
-    <div class="chart"><h3>Thrust (N) <span class="legend"><i class="k1"></i>measured <i class="k2"></i>predicted from burn rate</span></h3><canvas id="cThrust"></canvas></div>
-    <div class="chart"><h3>Chamber temperature (&deg;C)</h3><canvas id="cTemp"></canvas></div>
-    <div class="chart"><h3>Propellant burn rate (kg/s)</h3><canvas id="cBurn"></canvas></div>
-    <div class="chart"><h3>Chamber pressure (bar)</h3><canvas id="cPress"></canvas></div>
-  </section>
-</main>
-
-<footer class="foot">
-  <p>How it works: the button calls an API that starts a producer writing 20 rows/s into a Kinesis data stream. A reader pulls new rows off the stream and this page charts them. Swap the reader for Amazon Managed Service for Apache Flink to compute windows, alarms and total impulse in-stream.</p>
-</footer>
-
-<script src="config.js"></script>
-<script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Live rocket engine telemetry streamed through Amazon Kinesis Data Streams." />
+    <title>GSU-RX-1 Hot Fire | Amazon Kinesis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
 </html>
